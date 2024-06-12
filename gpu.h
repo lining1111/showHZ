@@ -10,7 +10,7 @@
 
 typedef struct {
     uint32_t height;//显存高度
-    uint32_t width;//显存宽度
+    uint32_t width;//显存宽度，如果bpp是1,则width是显示区域的1/8
     uint32_t bpp;//每像素位数
     uint32_t pitch;//显存每行字节数
     uint32_t size;//显存大小

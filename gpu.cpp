@@ -38,20 +38,26 @@ int gpuClear(GPU *gpu) {
 }
 
 int gpuFill(GPU *gpu, uint8_t *data, uint32_t dataWidth, uint32_t dataHeight, uint32_t start_x, uint32_t start_y) {
+    uint32_t realDataWidth = dataWidth * gpu->bpp / 8;
+    uint32_t realDataHeight = dataHeight;
+    uint32_t realStartX = start_x * gpu->bpp / 8;
+    uint32_t realStartY = start_y;
+    uint32_t realGPUWidth = gpu->width * gpu->bpp / 8;
+    uint32_t realGPUHeight = gpu->height;
 
     //1.判断开始的位置是否在显存内，如果越界则直接退出
     if (start_x > gpu->width || start_y > gpu->height) {
         return -1;
     }
     //2.判断要显示的区域在显存内是否越界，如果越界则取交集
-    uint32_t width = (dataWidth + start_x) > gpu->width ? gpu->width - start_x : dataWidth;
-    uint32_t height = (dataHeight + start_y) > gpu->height ? gpu->height - start_y : dataHeight;
+    uint32_t width = (realDataWidth + realStartX) > realGPUWidth ? (realGPUWidth - realStartX) : realDataWidth;
+    uint32_t height = (realDataHeight + realStartY) > realGPUHeight ? (realGPUHeight - realStartY) : realDataHeight;
 
     //3.开始将数据拷贝到显存中
     uint32_t pitch = dataWidth * gpu->bpp / 8;
-    for (int i = start_y; i < start_y + height; i++) {
-        for (int j = start_x; j < start_x + pitch; ++j) {
-            memcpy(gpu->buf + (i * gpu->pitch + j), data + ((i - start_y) * pitch + (j - start_x)), 1);
+    for (int i = realStartY; i < realStartY + height; i++) {
+        for (int j = realStartX; j < width + pitch; ++j) {
+            memcpy(gpu->buf + (i * gpu->pitch + j), data + ((i - realStartY) * pitch + (j - realStartX)), 1);
         }
     }
 
@@ -69,7 +75,8 @@ void test_gpu() {
     if (ret > 0) {
         //将字符数据填充到显存中
         gpuClear(&gpu);
-        gpuFill(&gpu, font.buf, font.width, font.height, 0, 0);
+        uint32_t offset = 1;
+        gpuFill(&gpu, font.buf, font.width, font.height, 16 * offset, offset);
 
 //        //开始显示单字
 //        for (int i = 0; i < font.height; i++) {
